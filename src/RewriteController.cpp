@@ -449,10 +449,13 @@ void RewriteController::HandleWorkerCompleted(HWND ownerWindow, LPARAM lparam) {
   }
 
   if (!workerResult->success) {
-    ShowErrorMessageBox(ownerWindow, workerResult->error);
     if (workerResult->shouldOpenSettings && showSettingsCallback_) {
+      LogError(workerResult->error);
       showSettingsCallback_();
+      CompleteOperation();
+      return;
     }
+    ShowErrorMessageBox(ownerWindow, workerResult->error);
     CompleteOperation();
     return;
   }

@@ -1,6 +1,6 @@
 #define AppId "{{C54C5132-94B4-4D41-9157-680DA9A0F329}"
 #define AppName "Windows AI Rewrite"
-#define AppVersion "0.1.0"
+#define AppVersion "0.3.0"
 #define AppPublisher "Windows AI Rewrite"
 #define AppExeName "WindowsAIRewrite.exe"
 #define BuildOutputDir "..\\build\\windows-msvc-x64\\Release"

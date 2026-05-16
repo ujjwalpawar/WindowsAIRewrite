@@ -47,6 +47,7 @@ class SettingsWindow {
   void SaveFirstRunApiKey();
   void SaveSettings();
   void DeleteApiKey();
+  void OpenApiKeySetup();
   void RefreshApiKeyStatus();
   void UpdateModels();
   void SetModelStatus(const std::wstring& text, bool isError);
@@ -71,6 +72,7 @@ class SettingsWindow {
   HWND ownerWindow_ = nullptr;
   HWND apiKeyEdit_ = nullptr;
   HWND apiKeyStatus_ = nullptr;
+  HWND deleteApiKeyButton_ = nullptr;
   HWND hotkeyEdit_ = nullptr;
   HWND hotkeyStatus_ = nullptr;
   HWND modelCombo_ = nullptr;

@@ -29,6 +29,8 @@ constexpr int kFirstRunWindowWidth = 620;
 constexpr int kFirstRunWindowHeight = 360;
 constexpr int kSettingsWindowWidth = 660;
 constexpr int kSettingsWindowHeight = 540;
+constexpr int kSettingsBottomButtonLift = 18;
+constexpr int kFirstRunBottomButtonLift = 18;
 constexpr int kContentLeft = Win32UiTheme::Space::kXl;
 constexpr int kContentTop = Win32UiTheme::Space::kLg;
 constexpr int kFirstRunContentWidth = kFirstRunWindowWidth - (Win32UiTheme::Space::kXl * 2);
@@ -1083,6 +1085,7 @@ bool SettingsWindow::ShowModal(HWND ownerWindow, Mode mode) {
   capturingHotkey_ = false;
   apiKeyEdit_ = nullptr;
   apiKeyStatus_ = nullptr;
+  deleteApiKeyButton_ = nullptr;
   hotkeyEdit_ = nullptr;
   hotkeyStatus_ = nullptr;
   modelCombo_ = nullptr;
@@ -1259,7 +1262,7 @@ void SettingsWindow::CreateFirstRunControls() {
                        Win32UiTheme::Metric::kButtonWidth;
   const int cancelLeft = saveLeft - kButtonGap - Win32UiTheme::Metric::kButtonWidth;
   const int buttonTop = kFirstRunWindowHeight - Win32UiTheme::Space::kXxl -
-                        Win32UiTheme::Metric::kButtonHeight;
+                        kFirstRunBottomButtonLift - Win32UiTheme::Metric::kButtonHeight;
   CreateButton(
     windowHandle_,
     instanceHandle_,
@@ -1298,43 +1301,22 @@ void SettingsWindow::CreateSettingsControls() {
     L"",
     kContentLeft,
     kSettingsStatusTop,
-    kSettingsContentWidth,
+    kSettingsContentWidth - Win32UiTheme::Metric::kButtonWidth - kButtonGap,
     Win32UiTheme::Metric::kLabelHeight,
     bodyFont_,
     UiControlId::kSettingsApiKeyStatus);
-  RefreshApiKeyStatus();
-
-  int rowTop = kSettingsFirstRowTop;
-  CreateStaticText(
-    windowHandle_,
-    instanceHandle_,
-    L"Add or replace API key",
-    kContentLeft,
-    rowTop,
-    kLabelWidth,
-    Win32UiTheme::Metric::kLabelHeight,
-    bodyFont_);
-  apiKeyEdit_ = CreateInput(
-    windowHandle_,
-    instanceHandle_,
-    L"",
-    UiControlId::kSettingsApiKeyEdit,
-    kInputLeft,
-    rowTop,
-    kInputWidth - Win32UiTheme::Metric::kButtonWidth - kButtonGap,
-    ES_PASSWORD,
-    bodyFont_);
-  CreateButton(
+  deleteApiKeyButton_ = CreateButton(
     windowHandle_,
     instanceHandle_,
     L"Remove key",
     UiControlId::kSettingsDeleteApiKeyButton,
-    kInputLeft + kInputWidth - Win32UiTheme::Metric::kButtonWidth,
-    rowTop,
+    kContentLeft + kSettingsContentWidth - Win32UiTheme::Metric::kButtonWidth,
+    kSettingsStatusTop,
     Win32UiTheme::Metric::kButtonWidth,
     bodyFont_);
+  RefreshApiKeyStatus();
 
-  rowTop += kRowGap;
+  int rowTop = kSettingsFirstRowTop;
   CreateStaticText(windowHandle_, instanceHandle_, L"Hotkey", kContentLeft, rowTop, kLabelWidth,
     Win32UiTheme::Metric::kLabelHeight, bodyFont_);
   hotkeyEdit_ = CreateInput(windowHandle_, instanceHandle_, settings_.hotkey.c_str(),
@@ -1387,7 +1369,7 @@ void SettingsWindow::CreateSettingsControls() {
   const int saveLeft = kSettingsWindowWidth - Win32UiTheme::Space::kXl -
                        Win32UiTheme::Metric::kButtonWidth;
   const int cancelLeft = saveLeft - kButtonGap - Win32UiTheme::Metric::kButtonWidth;
-  const int buttonTop = kSettingsWindowHeight - Win32UiTheme::Space::kXxl -
+  const int buttonTop = kSettingsWindowHeight - Win32UiTheme::Space::kXxl - kSettingsBottomButtonLift -
                         Win32UiTheme::Metric::kButtonHeight;
   CreateButton(windowHandle_, instanceHandle_, L"Cancel", UiControlId::kSettingsCancelButton,
     cancelLeft, buttonTop, Win32UiTheme::Metric::kButtonWidth, bodyFont_);
@@ -1447,20 +1429,8 @@ void SettingsWindow::SaveSettings() {
     return;
   }
 
-  std::wstring apiKey = Trim(ReadControlText(apiKeyEdit_));
-  if (!apiKey.empty()) {
-    const CredentialOperationResult writeResult = credentialStore_.Write(apiKey);
-    ClearString(&apiKey);
-    SetWindowTextW(apiKeyEdit_, L"");
-    if (writeResult.status != CredentialStoreStatus::kSuccess) {
-      MessageBoxW(windowHandle_, L"The API key could not be saved to Credential Manager.", kSettingsTitle,
-        MB_OK | MB_ICONERROR);
-      return;
-    }
-    apiKeyConfigured_ = true;
-  }
-
   settings_ = updatedSettings;
+  apiKeyConfigured_ = credentialStore_.Exists();
   result_ = {
     .action = SettingsWindowAction::kSaved,
     .settings = settings_,
@@ -1478,17 +1448,30 @@ void SettingsWindow::DeleteApiKey() {
   }
 
   apiKeyConfigured_ = false;
-  SetWindowTextW(apiKeyEdit_, L"");
   RefreshApiKeyStatus();
   MessageBoxW(windowHandle_, L"No API key saved.", kSettingsTitle, MB_OK | MB_ICONINFORMATION);
 }
 
+void SettingsWindow::OpenApiKeySetup() {
+  SettingsWindow setupWindow(instanceHandle_, settingsStore_, credentialStore_);
+  const bool setupSucceeded = setupWindow.ShowFirstRunSetup(windowHandle_);
+  apiKeyConfigured_ = credentialStore_.Exists();
+  result_.apiKeyConfigured = apiKeyConfigured_;
+  RefreshApiKeyStatus();
+  if (setupSucceeded && deleteApiKeyButton_ != nullptr) {
+    SetFocus(deleteApiKeyButton_);
+  }
+}
+
 void SettingsWindow::RefreshApiKeyStatus() {
-  if (apiKeyStatus_ == nullptr) {
-    return;
+  if (apiKeyStatus_ != nullptr) {
+    SetWindowTextW(apiKeyStatus_, apiKeyConfigured_ ? L"API key available" : L"No API key saved");
   }
 
-  SetWindowTextW(apiKeyStatus_, apiKeyConfigured_ ? L"API key available" : L"No API key saved");
+  if (deleteApiKeyButton_ != nullptr) {
+    SetWindowTextW(deleteApiKeyButton_, apiKeyConfigured_ ? L"Remove key" : L"Add key");
+    EnableWindow(deleteApiKeyButton_, TRUE);
+  }
 }
 
 void SettingsWindow::SetModelStatus(const std::wstring& text, bool isError) {
@@ -1502,7 +1485,7 @@ void SettingsWindow::SetModelStatus(const std::wstring& text, bool isError) {
 void SettingsWindow::UpdateModels() {
   CredentialReadResult readResult = credentialStore_.Read();
   if (readResult.status != CredentialStoreStatus::kSuccess || readResult.value.empty()) {
-    SetModelStatus(L"Save an OpenAI API key before updating models.", true);
+    SetModelStatus(L"Add an OpenAI API key before updating models.", true);
     return;
   }
 
@@ -1691,7 +1674,11 @@ LRESULT SettingsWindow::HandleMessage(HWND windowHandle, UINT message, WPARAM wp
           }
           return 0;
         case UiControlId::kSettingsDeleteApiKeyButton:
-          DeleteApiKey();
+          if (apiKeyConfigured_) {
+            DeleteApiKey();
+          } else {
+            OpenApiKeySetup();
+          }
           return 0;
         case UiControlId::kSettingsRegisterHotkeyButton:
           if (mode_ == Mode::kSettings) {

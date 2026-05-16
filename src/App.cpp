@@ -217,7 +217,7 @@ void App::ShowStatusDialog(const std::wstring& message, UINT type) const {
 }
 
 void App::ShowAboutDialog() const {
-  ShowStatusDialog(L"Windows AI Rewrite\nVersion 0.1.0", MB_ICONINFORMATION | MB_OK);
+  ShowStatusDialog(L"Windows AI Rewrite\nVersion 0.3.0", MB_ICONINFORMATION | MB_OK);
 }
 
 void App::StartRewriteSelection() {
