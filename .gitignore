@@ -3,6 +3,15 @@
 /out/
 /CMakeUserPresets.json
 
+# Local secrets and machine-specific runtime config
+.env
+.env.*
+*.key
+*.pem
+secrets.*
+settings.json
+models.json
+
 *.VC.db
 *.VC.opendb
 *.cache
