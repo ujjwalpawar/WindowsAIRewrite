@@ -1,0 +1,35 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 26,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windows-msvc-x64",
+      "displayName": "Windows MSVC x64",
+      "description": "Configure the WindowsAIRewrite GUI app with Visual Studio 2022 and x64 architecture.",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/windows-msvc-x64",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_POLICY_DEFAULT_CMP0091": "NEW",
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-msvc-x64-release",
+      "displayName": "Windows MSVC x64 Release",
+      "description": "Build the WindowsAIRewrite GUI app in Release mode.",
+      "configurePreset": "windows-msvc-x64",
+      "configuration": "Release"
+    }
+  ]
+}

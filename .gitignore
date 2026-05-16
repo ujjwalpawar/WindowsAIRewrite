@@ -1,0 +1,14 @@
+/build/
+/.vs/
+/out/
+/CMakeUserPresets.json
+
+*.VC.db
+*.VC.opendb
+*.cache
+*.log
+*.obj
+*.pdb
+*.suo
+*.user
+*.userosscache
