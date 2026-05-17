@@ -2,6 +2,10 @@
 
 `WindowsAIRewrite` is a native C++20 Windows utility for hotkey-first text rewriting with a tray app, preview flow, and per-user credential storage.
 
+## Demo
+
+https://github.com/ujjwalpawar/WindowsAIRewrite/raw/main/media/windows-ai-rewrite-demo.mp4
+
 ## MVP scope
 
 - Native Windows desktop executable built with CMake, MSVC v143+, and vcpkg manifest mode.
