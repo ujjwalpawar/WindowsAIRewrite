@@ -4,7 +4,7 @@
 
 ## Demo
 
-![WindowsAIRewrite demo](media/windows-ai-rewrite-demo.mp4)
+![WindowsAIRewrite demo](media/windows-ai-rewrite-demo.gif)
 
 ## MVP scope
 
